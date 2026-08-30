@@ -13,12 +13,20 @@ Or pass the key inline:
 
 import asyncio
 import os
+from pathlib import Path
 import sys
+
+# Ensure project root is in sys.path when running script directly
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from dotenv import load_dotenv
 
 from ai.model import Context, Model, StreamOptions
 from ai.api.openrouter import OpenRouterProvider
 from agent.types import TextContent, UserMessage
+
 load_dotenv()  # Load environment variables from .env file
 
 
