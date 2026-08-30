@@ -14,10 +14,12 @@ Or pass the key inline:
 import asyncio
 import os
 import sys
+from dotenv import load_dotenv
 
 from ai.model import Context, Model, StreamOptions
 from ai.api.openrouter import OpenRouterProvider
 from agent.types import TextContent, UserMessage
+load_dotenv()  # Load environment variables from .env file
 
 
 async def main():
