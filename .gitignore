@@ -1,10 +1,5 @@
 .env
 venv
 .venv
-
-
-# Python
 __pycache__/
-*.py[cod]
-*.pyo
-*.pyd
+*.pyc
