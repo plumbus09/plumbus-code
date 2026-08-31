@@ -1,14 +1,17 @@
 """
 tools/glob.py — Tool for finding files by glob pattern.
+
+Fix applied: base_path resolution routed through resolve_within_cwd
+(tools/safety.py) — was previously unrestricted.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from agent.types import TextContent, ToolResult
 from tools.base import Tool, ToolContext, ToolUpdateCallback
+from tools.safety import resolve_within_cwd
 
 DEFAULT_IGNORED_DIRS = {".git", "__pycache__", "venv", ".venv", "node_modules", ".pytest_cache", ".idea", ".vscode"}
 
@@ -50,8 +53,7 @@ class GlobTool(Tool):
             raise ValueError("Argument 'pattern' must be a non-empty string.")
 
         rel_base = arguments.get("path", ".")
-        base_path = Path(context.cwd) / rel_base if not Path(rel_base).is_absolute() else Path(rel_base)
-        base_path = base_path.resolve()
+        base_path = resolve_within_cwd(context.cwd, rel_base)
 
         if not base_path.exists():
             raise FileNotFoundError(f"Search directory not found: {rel_base}")

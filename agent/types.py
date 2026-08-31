@@ -109,7 +109,7 @@ ReplaySafety = Literal["safe", "unsafe"]
 class ToolSpec(Frozen):
     name: str
     label: str                       # human-readable, for UI/logs
-    schema: dict[str, Any]           # JSON schema for arguments
+    parameters_schema: dict[str, Any]           # JSON schema for arguments
     replay_safety: ReplaySafety
     execution_mode: Literal["sequential", "parallel"] = "parallel"
 

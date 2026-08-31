@@ -5,8 +5,8 @@ Mirrors pi's AgentTool<TParameters, TDetails> (packages/agent/src/types.ts),
 adapted to Python. Unlike Provider.stream() in ai/model.py, a Tool's
 execute() is ALLOWED to raise — pi's own doc comment says so explicitly:
 "Execute the tool call. Throw on failure instead of encoding errors in
-content." The loop (core/loop.py, built next) is responsible for catching
-that exception and turning it into an error ToolResult — see
+content." The loop (agent/loop.py) is responsible for catching that
+exception and turning it into an error ToolResult — see
 executePreparedToolCall in pi's agent-loop.ts, which wraps every tool
 execute() call in try/except. Keep that responsibility in the loop, not
 here, so individual tools stay simple to write.
@@ -30,8 +30,8 @@ class ToolContext:
       `await context.confirm("About to delete 3 files")` and gets a
       True/False back. The tool decides WHEN to ask; the POLICY of which
       tools need asking (auto/ask/deny per tool) lives one layer up, in a
-      permission gate wrapping tool dispatch — that's Phase 2 work, not
-      built yet. This field is just the plumbing that policy will use.
+      permission gate wrapping tool dispatch — Phase 4 work, not built
+      yet. This field is just the plumbing that policy will use.
     - cancel: anything with an is_set() method, checked between steps of a
       long-running tool so Ctrl+C can interrupt cleanly. Mirrors
       StreamOptions.cancel in ai/model.py.
@@ -93,8 +93,8 @@ class Tool(ABC):
         """
         Do the actual work. Raise on failure — do not try to encode errors
         into a successful-looking ToolResult yourself. The loop's tool
-        dispatch (built next) is responsible for catching exceptions here
-        and converting them into an error ToolResult.
+        dispatch is responsible for catching exceptions here and
+        converting them into an error ToolResult.
         """
         ...
 
@@ -103,7 +103,7 @@ class Tool(ABC):
         return ToolSpec(
             name=self.name,
             label=self.label,
-            schema=self.parameters_schema,
+            parameters_schema=self.parameters_schema,   # FIXED: was `schema=`
             replay_safety=self.replay_safety,
             execution_mode=self.execution_mode,
         )

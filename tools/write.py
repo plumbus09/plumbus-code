@@ -10,7 +10,7 @@ from typing import Any
 
 from agent.types import TextContent, ToolResult
 from tools.base import Tool, ToolContext, ToolUpdateCallback
-
+from tools.safety import resolve_within_cwd
 
 class WriteFileTool(Tool):
     """
@@ -52,8 +52,7 @@ class WriteFileTool(Tool):
         if content is None or not isinstance(content, str):
             raise ValueError("Argument 'content' must be a string.")
 
-        target_path = Path(context.cwd) / rel_path if not Path(rel_path).is_absolute() else Path(rel_path)
-        target_path = target_path.resolve()
+        target_path = resolve_within_cwd(context.cwd, rel_path)
 
         existed = target_path.exists()
         old_content = ""

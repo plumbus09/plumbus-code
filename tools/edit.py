@@ -10,7 +10,7 @@ from typing import Any
 
 from agent.types import TextContent, ToolResult
 from tools.base import Tool, ToolContext, ToolUpdateCallback
-
+from tools.safety import resolve_within_cwd
 
 class EditTool(Tool):
     """
@@ -66,8 +66,7 @@ class EditTool(Tool):
 
         allow_multiple = bool(arguments.get("allow_multiple", False))
 
-        target_path = Path(context.cwd) / rel_path if not Path(rel_path).is_absolute() else Path(rel_path)
-        target_path = target_path.resolve()
+        target_path = resolve_within_cwd(context.cwd, rel_path)
 
         if not target_path.exists():
             raise FileNotFoundError(f"File not found: {rel_path}")
