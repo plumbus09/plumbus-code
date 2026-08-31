@@ -9,8 +9,7 @@ from typing import Any
 
 from agent.types import TextContent, ToolResult
 from tools.base import Tool, ToolContext, ToolUpdateCallback
-
-
+from tools.safety import resolve_within_cwd
 class ReadFileTool(Tool):
     """
     Reads contents of a text file with 1-indexed line numbers and line slice limits.
@@ -51,8 +50,9 @@ class ReadFileTool(Tool):
         if not rel_path or not isinstance(rel_path, str):
             raise ValueError("Argument 'path' must be a non-empty string.")
 
-        target_path = Path(context.cwd) / rel_path if not Path(rel_path).is_absolute() else Path(rel_path)
-        target_path = target_path.resolve()
+        
+        
+        target_path = resolve_within_cwd(context.cwd, rel_path)
 
         if not target_path.exists():
             raise FileNotFoundError(f"File not found: {rel_path}")

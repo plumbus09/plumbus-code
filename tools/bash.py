@@ -1,5 +1,10 @@
 """
 tools/bash.py — Tool for executing shell commands.
+
+FIX applied: a non-zero exit code is a normal, informative result (grep
+finding no matches, a test suite reporting failures, etc.) — not a broken
+tool execution. Only real execution failures (couldn't spawn, timed out)
+raise. See ARCHITECTURE.md review notes.
 """
 
 from __future__ import annotations
@@ -71,6 +76,7 @@ class BashTool(Tool):
         except asyncio.TimeoutError:
             try:
                 process.kill()
+                await process.communicate()  # reap the killed process
             except Exception:
                 pass
             raise RuntimeError(f"Command timed out after {timeout} seconds: {command}")
@@ -98,10 +104,12 @@ class BashTool(Tool):
                 + output[-half:]
             )
 
+        # FIX: non-zero exit is a normal result, not a tool failure. The
+        # model needs to SEE the exit code and output to reason about what
+        # happened next (e.g. "grep found nothing" vs "grep is broken").
+        # Only spawn/timeout failures above are real tool-execution errors.
         if process.returncode != 0:
-            raise RuntimeError(
-                f"Command returned non-zero exit status {process.returncode}:\n{output}"
-            )
+            output = f"[exit code {process.returncode}]\n{output}"
 
         return ToolResult(
             content=[TextContent(text=output)],
