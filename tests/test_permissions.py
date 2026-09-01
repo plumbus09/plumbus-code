@@ -4,8 +4,14 @@ tests/test_permissions.py — Unit & e2e tests for permission gate & command den
 
 import asyncio
 import os
+from pathlib import Path
+import sys
 import tempfile
 import unittest
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from agent.loop import run_loop
 from agent.types import AssistantMessage, ToolCallContent

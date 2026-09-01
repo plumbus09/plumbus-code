@@ -5,8 +5,14 @@ tests/test_terminal.py — Tests for event streaming, Terminal UI rendering, dif
 import asyncio
 import io
 import os
+from pathlib import Path
+import sys
 import tempfile
 import unittest
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from rich.console import Console
 
