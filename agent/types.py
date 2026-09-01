@@ -206,3 +206,78 @@ class Entry(Frozen):
 # find yourself doing that, the contract has been violated somewhere.
 # ---------------------------------------------------------------------------
 StreamFn = Any  # Callable[[list[Message], list[ToolSpec]], Awaitable[AssistantMessage]]
+
+
+# ---------------------------------------------------------------------------
+# Agent Events — exposed by agent/loop.py run_loop_stream()
+# ---------------------------------------------------------------------------
+class AgentTurnStart(Frozen):
+    type: Literal["turn_start"] = "turn_start"
+    turn: int
+
+
+class AgentTextDelta(Frozen):
+    type: Literal["text_delta"] = "text_delta"
+    delta: str
+
+
+class AgentToolCallStarted(Frozen):
+    type: Literal["tool_call_started"] = "tool_call_started"
+    tool_call_id: str
+    name: str
+    arguments: dict[str, Any]
+
+
+class AgentToolExecutionStarted(Frozen):
+    type: Literal["tool_execution_started"] = "tool_execution_started"
+    tool_call_id: str
+    name: str
+
+
+class AgentToolUpdate(Frozen):
+    type: Literal["tool_update"] = "tool_update"
+    tool_call_id: str
+    name: str
+    result: ToolResult
+
+
+class AgentToolExecutionDone(Frozen):
+    type: Literal["tool_execution_done"] = "tool_execution_done"
+    tool_call_id: str
+    name: str
+    result_message: ToolResultMessage
+
+
+class AgentAssistantMessage(Frozen):
+    type: Literal["assistant_message"] = "assistant_message"
+    message: AssistantMessage
+
+
+class AgentTurnDone(Frozen):
+    type: Literal["turn_done"] = "turn_done"
+    turn: int
+
+
+class AgentLoopDone(Frozen):
+    type: Literal["loop_done"] = "loop_done"
+    messages: list[Message]
+    stop_reason: StopReason
+
+
+class AgentLoopAborted(Frozen):
+    type: Literal["loop_aborted"] = "loop_aborted"
+    reason: str
+
+
+AgentEvent = Union[
+    AgentTurnStart,
+    AgentTextDelta,
+    AgentToolCallStarted,
+    AgentToolExecutionStarted,
+    AgentToolUpdate,
+    AgentToolExecutionDone,
+    AgentAssistantMessage,
+    AgentTurnDone,
+    AgentLoopDone,
+    AgentLoopAborted,
+]
