@@ -138,9 +138,9 @@ class TestTools(unittest.TestCase):
         self.assertIn("hello world", res.content[0].text)
         self.assertEqual(res.details["exit_code"], 0)
 
-        # Non-zero exit status raises RuntimeError
-        with self.assertRaises(RuntimeError):
-            asyncio.run(bash_tool.execute("cbash-err", {"command": "exit 1"}, self.context))
+        # Non-zero exit status returns exit_code in details, does not raise RuntimeError
+        res_err = asyncio.run(bash_tool.execute("cbash-err", {"command": "exit 1"}, self.context))
+        self.assertEqual(res_err.details["exit_code"], 1)
 
 
 if __name__ == "__main__":
