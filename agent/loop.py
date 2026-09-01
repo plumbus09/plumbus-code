@@ -32,6 +32,7 @@ from agent.types import (
 )
 from ai.model import Context, Model, Provider, StreamOptions
 from tools.base import ToolContext
+from tools.permissions import PermissionPolicy
 from tools.registry import ToolRegistry
  
  
@@ -176,8 +177,33 @@ async def _dispatch_one_tool_call(
     except Exception as exc:  # noqa: BLE001 — preparation failures are data, like pi's prepareToolCall.
         return _error_tool_result(call, f"Failed to prepare arguments: {exc}")
  
-    # Permission gate goes here in Phase 4 (tool_context.confirm(...)).
-    # For now every prepared call proceeds straight to execution.
+    # Permission gate check
+    policy: PermissionPolicy = tool_context.policy or PermissionPolicy()
+    action = policy.evaluate(tool, args)
+ 
+    if action == "deny":
+        return _error_tool_result(
+            call,
+            f"Tool execution denied by permission policy: '{call.name}' is forbidden or matched a denied command pattern.",
+        )
+ 
+    if action == "ask":
+        if tool_context.confirm is None:
+            return _error_tool_result(
+                call,
+                f"Tool execution for '{call.name}' requires user confirmation, but no confirmation callback was provided.",
+            )
+        prompt_text = f"Allow execution of tool '{call.name}' with arguments {args}?"
+        try:
+            confirmed = await tool_context.confirm(prompt_text)
+        except Exception as exc:  # noqa: BLE001
+            return _error_tool_result(call, f"Confirmation callback failed: {exc}")
+ 
+        if not confirmed:
+            return _error_tool_result(
+                call,
+                f"Tool execution for '{call.name}' denied by user confirmation.",
+            )
  
     # --- execute -------------------------------------------------------
     try:

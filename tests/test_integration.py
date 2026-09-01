@@ -101,11 +101,15 @@ class ScriptedNonZeroExitProvider:
         yield StreamDone(message=msg)
 
 
+async def auto_confirm(prompt: str) -> bool:
+    return True
+
+
 async def test_real_bash_tool_round_trip():
     with tempfile.TemporaryDirectory() as tmpdir:
         registry = ToolRegistry()
         registry.register(BashTool())
-        ctx = ToolContext(cwd=tmpdir)
+        ctx = ToolContext(cwd=tmpdir, confirm=auto_confirm)
 
         messages = await run_loop(
             prompt_text="run a command that says hello",
@@ -139,7 +143,7 @@ async def test_nonzero_exit_is_not_treated_as_tool_error():
 
         registry = ToolRegistry()
         registry.register(BashTool())
-        ctx = ToolContext(cwd=tmpdir)
+        ctx = ToolContext(cwd=tmpdir, confirm=auto_confirm)
 
         messages = await run_loop(
             prompt_text="check for a pattern",
@@ -168,7 +172,7 @@ async def test_bad_command_still_raises_and_becomes_error_result():
     with tempfile.TemporaryDirectory() as tmpdir:
         registry = ToolRegistry()
         registry.register(BashTool())
-        ctx = ToolContext(cwd=tmpdir)
+        ctx = ToolContext(cwd=tmpdir, confirm=auto_confirm)
 
         class BadArgsProvider:
             async def stream(self, model, context, options):

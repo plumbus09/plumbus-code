@@ -9,6 +9,7 @@ from tools.bash import BashTool
 from tools.edit import EditTool
 from tools.glob import GlobTool
 from tools.grep import GrepTool
+from tools.permissions import ActionPolicy, PermissionPolicy
 from tools.read import ReadFileTool
 from tools.registry import ToolRegistry
 from tools.write import WriteFileTool
@@ -34,6 +35,8 @@ __all__ = [
     "ToolResult",
     "ToolUpdateCallback",
     "ToolRegistry",
+    "ActionPolicy",
+    "PermissionPolicy",
     "BashTool",
     "ReadFileTool",
     "WriteFileTool",

@@ -42,10 +42,12 @@ class ToolContext:
         cwd: str,
         confirm: Callable[[str], Awaitable[bool]] | None = None,
         cancel: Any = None,
+        policy: Any = None,
     ):
         self.cwd = cwd
         self.confirm = confirm
         self.cancel = cancel
+        self.policy = policy
 
 
 ToolUpdateCallback = Callable[[ToolResult], None]
