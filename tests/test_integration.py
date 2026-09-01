@@ -58,7 +58,10 @@ class ScriptedProvider:
                 stop_reason="end_turn",
                 timestamp=0,
             )
-        yield StreamDone(message=msg)
+        try:
+            yield StreamDone(message=msg)
+        except GeneratorExit:
+            return
 
 
 class ScriptedNonZeroExitProvider:
@@ -98,7 +101,10 @@ class ScriptedNonZeroExitProvider:
             # (no matches found) is normal tool output, not a tool failure.
             assert last.is_error is False, f"grep exit 1 was wrongly treated as a tool error: {last}"
             msg = AssistantMessage(content=[TextContent(text="No matches found.")], stop_reason="end_turn", timestamp=0)
-        yield StreamDone(message=msg)
+        try:
+            yield StreamDone(message=msg)
+        except GeneratorExit:
+            return
 
 
 async def auto_confirm(prompt: str) -> bool:
@@ -180,7 +186,10 @@ async def test_bad_command_still_raises_and_becomes_error_result():
                     content=[ToolCallContent(id="c1", name="bash", arguments={"command": ""})],
                     stop_reason="tool_use", timestamp=0,
                 )
-                yield StreamDone(message=msg)
+                try:
+                    yield StreamDone(message=msg)
+                except GeneratorExit:
+                    return
 
         messages = await run_loop(
             prompt_text="run empty command",
