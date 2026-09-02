@@ -18,7 +18,7 @@ from ai.model import Model
 from terminal.runner import run_terminal_session
 from tools import default_tools
 from tools.permissions import PermissionPolicy
-
+from terminal.banner import print_banner
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -83,11 +83,7 @@ async def main_async():
     tools = default_tools()
     policy = PermissionPolicy()
 
-    console.print(
-        f"\n[bold green]═══ Plumbus-Code Agent Ready ═══[/bold green]\n"
-        f"[dim]Model: {model.id} | Working Dir: {working_dir}[/dim]\n"
-        f"[dim]Type 'exit' or 'quit' to terminate session.[/dim]\n"
-    )
+    print_banner(console, model.id, working_dir)
 
     messages: list[Message] = []
     system_prompt = (

@@ -1,3 +1,4 @@
+# i was here
 """
 agent/loop.py — the step function and incremental event stream.
 Translated from pi's real packages/agent/src/agent-loop.ts.
@@ -153,7 +154,7 @@ async def run_loop_stream(
 
                     async for event_or_result in _dispatch_one_tool_call_stream(
                         call, tools, tool_context
-                    ):
+                    ): 
                         if isinstance(event_or_result, AgentToolUpdate):
                             yield event_or_result
                         elif isinstance(event_or_result, ToolResultMessage):
