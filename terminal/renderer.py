@@ -69,7 +69,7 @@ class TerminalRenderer:
             args_str = json.dumps(event.arguments, indent=2)
             self.console.print(
                 Panel(
-                    f"[bold magenta]Arguments:[/bold magenta]\n{args_str}",
+                    Text(args_str),
                     title=f"Tool Call Requested: [bold yellow]{event.name}[/bold yellow]",
                     border_style="yellow",
                 )
@@ -97,7 +97,7 @@ class TerminalRenderer:
             content_text = "\n".join(b.text for b in result_msg.content if b.type == "text")
             self.console.print(
                 Panel(
-                    content_text,
+                    Text(content_text),
                     title=f"Tool Result ({event.name}): [{status_style}]{status_text}[/{status_style}]",
                     border_style=status_style,
                 )
