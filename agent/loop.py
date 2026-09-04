@@ -1,11 +1,10 @@
-# i was here
 """
 agent/loop.py — the step function and incremental event stream.
 Translated from pi's real packages/agent/src/agent-loop.ts.
 
 No persistence here. No I/O beyond calling the Provider and the Tools it's
-given. This file works entirely in memory — Phase 5 (storage) wraps THIS
-loop for durability later; this loop doesn't know storage exists.
+given. This file works entirely in memory — agent/durable.py wraps this
+for durability; this loop doesn't know storage exists.
 
 Two contracts this file depends on and never violates:
   1. Provider.stream() never raises (ai/model.py) — so there is no
@@ -13,6 +12,13 @@ Two contracts this file depends on and never violates:
   2. Tool.execute() IS allowed to raise (tools/base.py) — so every tool
      call below IS wrapped in try/except, and a raised exception becomes
      an error ToolResult, never propagates out of the loop.
+
+_stream_assistant_response is extracted as a standalone function
+(factored out of run_loop_stream's inlined model-call logic) specifically
+so agent/durable.py can reuse the exact same model-call code without
+duplicating it — durable.py needs a plain "call the model once, get the
+final message back" primitive, not an event stream, since it commits its
+own INTENT/SETTLEMENT transactions around the call itself.
 """
 
 from __future__ import annotations
@@ -59,6 +65,35 @@ def _is_cancelled(tool_context: ToolContext) -> bool:
             return tool_context.cancel()
         return bool(tool_context.cancel)
     return False
+
+
+# ---------------------------------------------------------------------------
+# The model-call boundary, as a standalone reusable primitive.
+# ---------------------------------------------------------------------------
+async def _stream_assistant_response(
+    history: list[Message],
+    system_prompt: str,
+    model: Model,
+    provider: Provider,
+    tools: ToolRegistry,
+    api_key: str,
+) -> AssistantMessage:
+    """
+    No try/except here. Provider.stream() is contractually guaranteed to
+    never raise for request/model/runtime failures — see ai/model.py's
+    Provider docstring. If you ever find yourself adding a try/except
+    around this call, the bug is in the provider, not here.
+    """
+    context = Context(system_prompt=system_prompt, messages=history, tools=tools.specs())
+    options = StreamOptions(api_key=api_key)
+
+    final_message: AssistantMessage | None = None
+    async for event in provider.stream(model, context, options):
+        if event.type == "done":
+            final_message = event.message
+
+    assert final_message is not None, "Provider.stream() ended without a 'done' event — contract violation"
+    return final_message
 
 
 # ---------------------------------------------------------------------------
@@ -154,7 +189,7 @@ async def run_loop_stream(
 
                     async for event_or_result in _dispatch_one_tool_call_stream(
                         call, tools, tool_context
-                    ): 
+                    ):
                         if isinstance(event_or_result, AgentToolUpdate):
                             yield event_or_result
                         elif isinstance(event_or_result, ToolResultMessage):

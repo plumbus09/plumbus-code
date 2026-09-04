@@ -107,9 +107,11 @@ ReplaySafety = Literal["safe", "unsafe"]
 
 
 class ToolSpec(Frozen):
+    model_config = ConfigDict(frozen=True, protected_namespaces=())
+
     name: str
     label: str                       # human-readable, for UI/logs
-    parameters_schema: dict[str, Any]           # JSON schema for arguments
+    parameters_schema: dict[str, Any]  # JSON schema for arguments
     replay_safety: ReplaySafety
     execution_mode: Literal["sequential", "parallel"] = "parallel"
 
@@ -209,7 +211,10 @@ StreamFn = Any  # Callable[[list[Message], list[ToolSpec]], Awaitable[AssistantM
 
 
 # ---------------------------------------------------------------------------
-# Agent Events — exposed by agent/loop.py run_loop_stream()
+# AgentEvent — incremental events yielded by agent/loop.py's run_loop_stream.
+# Purely a UI/observability concern: nothing in storage/ or agent/durable.py
+# depends on these, since durability is built on ToolResultMessage /
+# AssistantMessage / Entry directly, not on this event stream.
 # ---------------------------------------------------------------------------
 class AgentTurnStart(Frozen):
     type: Literal["turn_start"] = "turn_start"
@@ -219,6 +224,11 @@ class AgentTurnStart(Frozen):
 class AgentTextDelta(Frozen):
     type: Literal["text_delta"] = "text_delta"
     delta: str
+
+
+class AgentAssistantMessage(Frozen):
+    type: Literal["assistant_message"] = "assistant_message"
+    message: AssistantMessage
 
 
 class AgentToolCallStarted(Frozen):
@@ -248,11 +258,6 @@ class AgentToolExecutionDone(Frozen):
     result_message: ToolResultMessage
 
 
-class AgentAssistantMessage(Frozen):
-    type: Literal["assistant_message"] = "assistant_message"
-    message: AssistantMessage
-
-
 class AgentTurnDone(Frozen):
     type: Literal["turn_done"] = "turn_done"
     turn: int
@@ -261,7 +266,7 @@ class AgentTurnDone(Frozen):
 class AgentLoopDone(Frozen):
     type: Literal["loop_done"] = "loop_done"
     messages: list[Message]
-    stop_reason: StopReason
+    stop_reason: str
 
 
 class AgentLoopAborted(Frozen):
@@ -270,14 +275,7 @@ class AgentLoopAborted(Frozen):
 
 
 AgentEvent = Union[
-    AgentTurnStart,
-    AgentTextDelta,
-    AgentToolCallStarted,
-    AgentToolExecutionStarted,
-    AgentToolUpdate,
-    AgentToolExecutionDone,
-    AgentAssistantMessage,
-    AgentTurnDone,
-    AgentLoopDone,
-    AgentLoopAborted,
+    AgentTurnStart, AgentTextDelta, AgentAssistantMessage, AgentToolCallStarted,
+    AgentToolExecutionStarted, AgentToolUpdate, AgentToolExecutionDone,
+    AgentTurnDone, AgentLoopDone, AgentLoopAborted,
 ]
